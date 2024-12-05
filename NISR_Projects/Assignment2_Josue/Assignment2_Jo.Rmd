@@ -1,0 +1,96 @@
+---
+title: "Assignment2_Jo"
+author: "Josue Iradukunda"
+date: "`r Sys.Date()`"
+output:
+  word_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+1. Import the CSV (comma-separated value) using the `read.csv()` command. Name it `survey_data`.
+```{r echo=FALSE}
+survey_data <- read.csv("data.csv")
+View(survey_data)
+```
+
+# Data cleaning using grepl
+
+```{r echo=FALSE}
+static <- grepl("statistic", survey_data$Background, ignore.case = TRUE)
+survey_data$Background[static] <- "Applied Statistics"
+```
+
+```{r echo=FALSE}
+data_sc <- grepl("Data Scientist", survey_data$Background, ignore.case = TRUE)
+survey_data$Background[data_sc] <- "Data Science"
+```
+
+```{r echo=FALSE}
+ind_art_desgn <- grepl("Industry art and design","Design", survey_data$Background, ignore.case = TRUE)
+survey_data$Background[ind_art_desgn] <- "Industrial Art and Design"
+```
+
+```{r echo=FALSE}
+ind_art_desgn <- grepl("Design", survey_data$Background, ignore.case = TRUE)
+survey_data$Background[ind_art_desgn] <- "Industrial Art and Design"
+```
+
+```{r echo=FALSE}
+infor_sys <- grepl("information syst", survey_data$Background, ignore.case = TRUE)
+survey_data$Background[infor_sys] <- "Information System"
+```
+
+```{r echo=FALSE}
+civ_eng <- grepl("civil engin", survey_data$Background, ignore.case = TRUE)
+survey_data$Background[civ_eng] <- "Civil Engineering"
+```
+
+```{r echo=FALSE}
+quant_surv <- grepl("Quantity surv", survey_data$Background, ignore.case = TRUE)
+survey_data$Background[quant_surv] <- "Quantity Surveying"
+```
+
+```{r echo=FALSE}
+trav_tour <- grepl("I have complete my bachelor degree in travel amd and tourism management", survey_data$Background, ignore.case = TRUE)
+survey_data$Background[trav_tour] <- "Travel and Tourism Management"
+```
+
+```{r echo=FALSE}
+demog <- grepl("demogr", survey_data$Background, ignore.case = TRUE)
+survey_data$Background[demog] <- "Demography"
+```
+
+```{r echo=FALSE}
+IT <- grepl("Information Technology Major of Information Management", survey_data$Background, ignore.case = TRUE)
+survey_data$Background[IT] <- "Information Technology"
+```
+
+```{r echo=FALSE}
+travel <- grepl("Bachelor degree in Travel and Tourism management at UTB.", survey_data$Background, ignore.case = TRUE)
+survey_data$Background[travel] <- "Travel and Tourism Management"
+```
+
+```{r echo=FALSE}
+travel <- grepl("Tourism", survey_data$Background, ignore.case = TRUE)
+survey_data$Background[travel] <- "Travel and Tourism Management"
+```
+
+```{r echo=FALSE}
+dt_table <- table(survey_data$Background)
+data_summary <- as.data.frame(dt_table)
+colnames(data_summary) <- c("Field","Count")
+
+data_summary$Percentage <- round(data_summary$Count/sum(data_summary$Count) * 100, 2)
+data_summary <- data_summary[order(-data_summary$Count),]
+data_summary
+```
+
+## 
+The table illustrates the distribution of respondents across nine fields of study, with **Applied Statistics** leading with 27 respondents, accounting for 52.94% of the total. **Data Science** comes next with 5 respondents (9.80%), while both **Industrial Art and Design** and **Information System** each have 4 respondents (7.84%). Fields like **Civil Engineering**, **Quantity Surveying**, and **Travel and Tourism Management** each have 3 respondents (5.88%). The least represented fields, **Demography** and **Information Technology**, each have only 1 respondent, making up 1.96%. In summary, the data is predominantly skewed toward Applied Statistics, with most other fields showing limited participation.
+
+```{r echo=FALSE}
+pie(data_summary$Count, labels = paste(data_summary$Field," (",data_summary$Percentage, "%)", sep = ""), main = "Distrution of Background", cex= 0.8, col = rainbow(length(data_summary$Field)))
+```

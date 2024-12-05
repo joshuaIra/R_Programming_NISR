@@ -1,0 +1,110 @@
+---
+title: "Class14th"
+author: "Josue Iradukunda"
+date: "`r Sys.Date()`"
+output: word_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Exercise:
+Make a scatter plot of `petal.Length` and `petal.Width` colored by `Species` using `iris` data frame
+```{r}
+data.frame(iris)
+```
+
+
+
+
+```{r echo=FALSE}
+plot(iris$Petal.Width,iris$Petal.Length, col=iris$Species, pch=16)
+legend("topleft", legend = unique(iris$Species), col = unique(iris$Species), pch=16, bty= "n")
+
+```
+
+```{r echo=FALSE}
+colors <- rainbow(length(unique(iris$Species)))
+species_colors <- colors[as.numeric(iris$Species)]
+
+plot(iris$Petal.Length, iris$Petal.Width,
+     col = species_colors,
+     pch = 16,
+     xlab = "Petal Length",
+     ylab = "Petal Width",
+     main = "Petal Length vs Petal Width species",)
+  legend("topleft", legend = levels(iris$Species), col = colors, pch = 16) 
+     
+
+```
+## Linear regression
+
+```{r echo=FALSE}
+f<- Petal.Length ~ Petal.Width   ### linear regression
+lr <- lm(f, data = iris)
+plot(f, data = iris, col = Species, pch = 16)
+abline(lr, col = "blue", lwd = 2, lty = 3)
+legend("topleft", legend = unique(iris$Species), col = unique(iris$Species), pch = 16, bty = "n")
+```
+
+## Uniforn distribution
+```{r echo=FALSE}
+set.seed(123)
+x <- runif(1000)
+hist(x, probability = TRUE, xlab = NULL,
+     main = " uniform distribution", col = "turquoise")
+
+lines(density(x), col = "brown", lwd = 2, lty = 2)
+abline(v = mean(x), col = "blue", lty = 2, lwd = 2)
+legend("topleft", lty = c(2, 2), 
+       col = c( "blue"), legend = c("Density", "Average"))
+
+```
+
+```{r echo=FALSE}
+qqnorm(x)
+qqline(x, col = "blue")q
+```
+###Binomial Distribution   
+##Mean (μ) = np
+## Variance (σ²) = np(1-p)
+## Bernoulli Distribution
+## Mean (μ) = p
+##Variance (σ²) = p(1-p)
+
+
+```{r echo=FALSE}
+set.seed(123)
+rbinom_dist <- rbinom(10000, 10, 0.5)
+hist(rbinom_dist, probability = TRUE, main = "Histogram of binomial distribution", 
+     col = "turquoise", breaks = 20, xlab = NULL)
+lines(density(rbinom_dist), col = "red", lwd = 2, lty = 2)
+abline(v = mean(rbinom_dist), col = "blue", lty = 2, lwd = 2) # vertical line
+legend("topleft", lty = c(2, 2), 
+       col = c("red", "blue"), legend = c("Density", "Average"))
+```
+
+### Gaussian distribution
+## f(x) = (1 / (σ√(2π))) * e^(-(x-μ)²/(2σ²))
+### Mean = Median = Mode
+
+```{r echo=FALSE}
+set.seed(13092024)
+gauss_dist <- rnorm(1000, mean = 0, sd = 1)
+hist(gauss_dist, probability = TRUE, breaks = 30, xlab = NULL,
+     main = "Histogram of standard normal\ndistribution", col = "turquoise")
+lines(density(gauss_dist), col = "red", lwd = 2, lty = 2)
+abline(v = mean(gauss_dist), col = "blue", lty = 2, lwd = 2)
+legend("topleft", lty = c(2, 2), 
+       col = c("red", "blue"), legend = c("Density", "Average"))
+```
+## example for binomial distribution
+```{r}
+x = 3        # successes
+n = 5        # trials
+p = 0.5      # probability
+prob = dbinom(x, n, p)
+print(paste("P(X =", x, ") =", prob))
+```
+

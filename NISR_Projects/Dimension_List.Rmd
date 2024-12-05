@@ -1,0 +1,119 @@
+---
+title: "Dimension"
+author: "Josue Iradukunda"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Dimension: row position, column position, and matrix level
+
+### Lists
+
+A list is a collection of objects of defferent types. The sizes of elements could be different.
+
+```{r}
+A <- matrix(c(2, 1, 0, 3), ncol = 2, byrow = TRUE)
+mylist <- list("matrix" = A, "sequence" = 5, "Bool" = TRUE)
+
+# mylist$matrix
+```
+```{r}
+L <- list()
+A <- matrix(0,5,6)
+L$A <- A #add on list a values.
+print(L)
+
+#Adding sequence on list
+L$my_seq <- sample(10, 5) #second number should be lest the firs, if not its return error.
+print(L)
+
+# add a boolean
+
+L$Bool <- TRUE
+print(L)
+
+L[['iris']] <- head(iris, 10)
+print(L) # print 10 element of list
+
+# checking number of elements in R
+
+length(L)
+
+L[[5]] <- "I am learning R programming"
+print(L)
+```
+
+Getting the `names` of element
+```{r}
+names(L)
+
+```
+Renaming the 5th element of L
+```{r}
+names(L)[5]  <- "String"
+print(L)
+```
+# Delete element in a List 
+```{r}
+L$Bool <-NULL
+print(L)
+```
+# Data Frame data type
+
+Is a table of any number of $n$ number of rows (observations) and $n$ number of columns (features or or variables) Variables can take any data type.
+
+### Converting a continous variable into a categorical variable
+
+```{r echo=TRUE}
+set.seed(123)
+n <- 120
+
+dt <- data.frame(
+  "ID" = paste("Participant", 1:n),
+  "age" = sample(0:120, size = n)
+)
+head(dt)
+
+```
+```{r}
+(brks <- seq(0,120, by = 10))
+
+dt$age_group <- cut(dt$age, breaks = brks, include.lowest = TRUE)
+
+head(dt, 8)
+```
+
+# Exercise
+1. provide the counts by age group
+
+```{r}
+count_age_group <- table((dt$age_group))
+count_age_group
+```
+# make a barplot of age group
+```{r}
+barplot(count_age_group)
+```
+#make histogram of ages 
+
+```{r}
+hist(age, col = "blue")
+
+```
+#Display the ID's of participants in the $70,80$ age group
+
+```{r}
+Id_group <- dt[dt$age_group == "(70,80]", "ID" ]
+Id_group
+```
+```{r}
+l <- split(dt, dt$age_group)
+l$`(70,80]`$ID  
+```
+

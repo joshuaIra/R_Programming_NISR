@@ -1,0 +1,377 @@
+---
+title: "Assignement 2"
+output:
+  word_document: default
+  pdf_document: default
+date: "2024-01-10"
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+1. Read the dataset in R.
+
+```{r echo=FALSE}
+# required package
+library(haven)
+
+# import data
+data_sav <- read_sav("C:\\Users\\PMVANO\\Desktop\\GROUP ASSIGNMENT\\DHS2020\\RWPR81FL.SAV")
+#data_map <- read.table("C:\\Users\\PMVANO\\Desktop\\GROUP ASSIGNMENT\\DHS2020\\RWPR81FL.SAV", sep = "\t", header = TRUE)
+
+# data dimension
+data_sav
+```
+
+ Getting familiar with the data
+ 
+```{r echo=FALSE}
+# your code here
+View(data_sav)
+dim_no <- dim(data_sav)
+#In our dataset `r dim_no[1]` is total number of Obersvation and `r dim_no[2]` total number of Variables.
+ #View(data_map)
+
+```
+
+2. Selecting few columns, 
+
+```{r echo=FALSE}
+selected_columns <- data_sav[, c("HV001", "HV009", "HV010", "HV011", "HV014", "SHDISTRICT", "HV024", "HV025", "HV040", "HV227", "HV228", "HV270", "HV105", "HV106", "HML3", "HML4", "HML7","HML10", "HML22", "HML32","HML33", "HML35")]
+selected_columns
+
+```
+3. Rename variables using the variable descriptions for  meaningful (short) name
+
+```{r echo=FALSE}
+#Rename variables using the variable descriptions given.
+colnames(selected_columns) <- c(
+  "ClusterNumber", "HouseholdMembers", "EligibleWomen", "EligibleMen", "ChildrenUnder5", 
+  "District", "Region", "ResidenceType", "Altitude", "BedNetPresence", 
+  "ChildrenUnder5BedNet", "WealthIndex", "Age", "EducationLevel", 
+  "NetObserved", "NetObtainedMonthsAgo", "NetBrand", "ITN", "NetSource", 
+  "BloodSmearMalariaResult", "MalariaMeasurementResult", "RapidTestMalariaResult"
+)
+head(selected_columns)
+
+```
+
+
+## Data cleaning
+
+1. Inspecting each variables,then  decoding variable to its original unique variables. 
+
+```{r echo=FALSE}
+# Decode all columns
+all_columns <-  c(
+  "ClusterNumber", "HouseholdMembers", "EligibleWomen", "EligibleMen", "ChildrenUnder5", "District", "Region", "ResidenceType", "Altitude", "BedNetPresence","ChildrenUnder5BedNet", "WealthIndex", "Age", "EducationLevel", 
+  "NetObserved", "NetObtainedMonthsAgo", "NetBrand", "ITN", "NetSource", 
+  "MalariaMeasurementResult", "BloodSmearMalariaResult", "RapidTestMalariaResult")
+
+selected_columns[all_columns] <- sapply(selected_columns[all_columns], as_factor)
+selected_columns
+```
+
+2.HANDLING MISSING VALUES
+
+```{r echo=FALSE}
+# checking columns with missing values in entire datasets
+missing_value <- colSums(is.na(selected_columns))
+# Determining columns with missing values
+missing_value[missing_value > 0]
+```
+REPLACING MISSING VALUES
+```{r echo=FALSE}
+# replacing missing values with mode for catergorical variables  
+# Mode function to handle categorical data
+calculate_mode <- function(x) {
+  # Handle NA values
+  x <- x[!is.na(x)]
+  # Find the most frequent value
+  if (length(x) == 0) return(NA)  # If all values are NA, return NA
+  mode_value <- names(sort(table(x), decreasing = TRUE))[1]
+  return(mode_value)
+}
+# Replacing mean for numeric variables,Handle all using lappy function
+selected_columns[] <- lapply(selected_columns, function(col) {
+  if (is.numeric(col)) {
+    # Replace numerical missing values with the mean
+    col[is.na(col)] <- mean(col, na.rm = TRUE)
+  } else if (is.factor(col) || is.character(col)) {
+    # Replace categorical missing values with the mode
+    col[is.na(col)] <- calculate_mode(col)
+  }
+  return(col)
+})
+
+selected_columns
+```
+
+3. Create new variables
+
+```{r echo=FALSE}
+#a. Creating new variable called "Old Mosquito"binary with 1 when mosquito is more than 24 months old. 
+selected_columns<- selected_columns %>%
+  mutate(Old_Mosquito = ifelse(NetObtainedMonthsAgo > 24, 1, 0))
+
+# View the updated data
+selected_columns
+```
+
+ "Average District altitude".
+
+```{r echo=FALSE}
+#b.Creating "Average District altitude" Variable
+
+selected_columns<- selected_columns %>%
+  group_by(District) %>%
+  mutate(Average_District_Altitude = mean(as.numeric(Altitude))) %>% ungroup()
+
+# View the data
+print(selected_columns)
+```
+ Data visualizations
+1.Bar plot
+```{r}
+bed_net_by_region <- selected_columns %>%
+  group_by(Region, BedNetPresence) %>%
+  summarise(Count = n(), .groups = 'drop') %>%
+  ggplot(aes(x = as.character(Region), y = Count, fill = as.character(BedNetPresence))) +
+  geom_bar(stat = "identity", position = "dodge") +
+  labs(title = "Bed Net Presence by Region",
+       x = "Region", 
+       y = "Number of Households",
+       fill = "Bed Net Presence") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+print(bed_net_by_region)
+```
+
+- Pie plot
+```{r echo=FALSE}
+# your code
+
+count <- table(selected_columns$WealthIndex)
+pc<-round(count/sum(count)*100,2)
+pie(count,
+    labels = paste0(names(count)," (", pc,"%)",sep=""),
+    main = "Distribution of Wealth Index", 
+    xlab = "Wealth Index",
+    col = c("green","blue","navy","purple","lightgreen")
+    )
+```
+
+- Histogram
+```{r}
+malaria_by_district <- selected_columns %>%
+  group_by(District, MalariaMeasurementResult) %>%
+  summarise(Count = n(), .groups = 'drop') %>%
+  # Sort districts by total malaria cases
+  group_by(District) %>%
+  mutate(TotalCases = sum(Count)) %>%
+  ungroup() %>%
+  arrange(desc(TotalCases)) %>%
+  # Select top 15 districts for readability
+  slice_head(n = 15) %>%
+  ggplot(aes(x = as.character(District), y = Count, fill = as.character(MalariaMeasurementResult))) +
+  geom_bar(stat = "identity", position = "dodge") +
+  labs(title = "Malaria Measurement Results in Top 15 Districts",
+       x = "District", 
+       y = "Number of Cases",
+       fill = "Malaria Result") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+print(malaria_by_district)
+```
+
+- Boxplot
+```{r}
+children_bednet_boxplot <- selected_columns %>%
+  mutate(ChildrenUnder5 = as.numeric(as.character(ChildrenUnder5))) %>%
+  ggplot(aes(x = as.character(BedNetPresence), y = ChildrenUnder5, fill = as.character(BedNetPresence))) +
+  geom_boxplot() +
+  labs(title = "Number of Children Under 5 by Bed Net Presence",
+       x = "Bed Net Presence", 
+       y = "Number of Children Under 5") +
+  theme_minimal()
+children_bednet_boxplot
+```
+
+STATISTICAL ANALYSIS
+```{r}
+library(tidyverse)
+library(stats)
+```
+1. Filtering out people who had Malaria measurement.
+```{r}
+# Function to filter malaria-related data
+# Removes rows with missing malaria test results
+filter_malaria_data <- function(data) {
+  # Filter out rows with complete malaria test results
+  filtered_data <- data %>%
+    filter(!is.na(BloodSmearMalariaResult) & !is.na(RapidTestMalariaResult))
+  
+  # Print filtering summary
+  cat("Data Filtering Summary:\n")
+  cat("Total original records:", nrow(data), "\n")
+  cat("Records after filtering:", nrow(filtered_data), "\n")
+  
+  return(filtered_data)
+}
+malaria_filtered_data <- filter_malaria_data(selected_columns)
+
+```
+2: Prevalence Calculation 
+```{r}
+# Function to calculate malaria prevalence for different test methods
+calculate_malaria_prevalence <- function(data) {
+  # Blood Smear Malaria Prevalence
+  blood_smear_prevalence <- data %>%
+    group_by(BloodSmearMalariaResult) %>%
+    summarise(
+      total_cases = n(),
+      positive_cases = sum(BloodSmearMalariaResult == "Positive"),
+      prevalence = (positive_cases / total_cases) * 100
+    )
+  
+  # Rapid Test Malaria Prevalence
+  rapid_test_prevalence <- data %>%
+    group_by(RapidTestMalariaResult) %>%
+    summarise(
+      total_cases = n(),
+      positive_cases = sum(RapidTestMalariaResult == "Positive"),
+      prevalence = (positive_cases / total_cases) * 100
+    )
+  
+  # Print prevalence results
+  cat("\nBlood Smear Malaria Prevalence:\n")
+  print(blood_smear_prevalence)
+  
+  cat("\nRapid Test Malaria Prevalence:\n")
+  print(rapid_test_prevalence)
+  
+  return(list(
+    blood_smear = blood_smear_prevalence, 
+    rapid_test = rapid_test_prevalence
+  ))
+}
+
+# Calculate prevalence
+malaria_prevalence <- calculate_malaria_prevalence(malaria_filtered_data)
+```
+
+ 3: District-Level Analysis 
+ 
+```{r}
+# Function to analyze malaria prevalence at district level
+analyze_district_prevalence <- function(data) {
+  district_prevalence <- data %>%
+    group_by(District) %>%
+    summarise(
+      total_cases = n(),
+      blood_smear_positive = sum(BloodSmearMalariaResult == "Positive"),
+      rapid_test_positive = sum(RapidTestMalariaResult == "Positive"),
+      blood_smear_prevalence = (blood_smear_positive / total_cases) * 100,
+      rapid_test_prevalence = (rapid_test_positive / total_cases) * 100,
+      average_altitude = mean(as.numeric(Altitude), na.rm = TRUE)
+    ) %>%
+    arrange(desc(blood_smear_prevalence))
+  
+  # Print district-level analysis
+  cat("\nDistrict-Level Prevalence Analysis:\n")
+  print(district_prevalence)
+  
+  return(district_prevalence)
+}
+
+# Perform district-level analysis
+district_prevalence_results <- analyze_district_prevalence(malaria_filtered_data)
+```
+
+ 4: Statistical Comparison 
+
+```{r}
+# Function to compare different test methods statistically
+compare_test_methods <- function(data) {
+  # Convert results to numeric for statistical testing
+  blood_smear_numeric <- as.numeric(data$BloodSmearMalariaResult == "Positive")
+  rapid_test_numeric <- as.numeric(data$RapidTestMalariaResult == "Positive")
+  
+  # Perform t-test
+  test_comparison <- t.test(blood_smear_numeric, rapid_test_numeric)
+  
+  # Print test comparison results
+  cat("\nTest Method Comparison (T-Test):\n")
+  print(test_comparison)
+  
+  return(test_comparison)
+}
+
+# Compare test methods
+test_method_results <- compare_test_methods(malaria_filtered_data)
+
+##OBSERVATION:
+
+# Statistical analysis reveals a highly significant difference between blood smear and rapid test results, 
+# with the rapid test showing a slightly higher mean value and an extremely low p-value (5.579e-13).
+```
+
+ Determining the correlation between altitude and malaria prevalence
+
+```{r}
+analyze_altitude_correlation <- function(district_data) {
+  # Linear regression model
+  altitude_prevalence_model <- lm(
+    blood_smear_prevalence ~ average_altitude, 
+    data = district_data
+  )
+  
+  # Visualization of Altitude vs Prevalence
+  altitude_prevalence_plot <- ggplot(district_data, 
+                                     aes(x = average_altitude, y = blood_smear_prevalence)) +
+    geom_point() +
+    geom_smooth(method = "lm", se = TRUE) +
+    labs(
+      title = "Malaria Prevalence vs District Altitude",
+      x = "Average District Altitude",
+      y = "Blood Smear Malaria Prevalence (%)"
+    ) +
+    theme_minimal()
+  
+  # Print model summary
+  cat("\nAltitude-Prevalence Relationship:\n")
+  print(summary(altitude_prevalence_model))
+  
+  # Print the plot
+  print(altitude_prevalence_plot)
+  
+  return(list(model = altitude_prevalence_model, plot = altitude_prevalence_plot))
+}
+
+# Analyze altitude correlation
+altitude_correlation_results <- analyze_altitude_correlation(district_prevalence_results)
+
+###OBSERVATION:
+
+# The linear regression model suggests a negative relationship between average district altitude and malaria prevalence, but this relationship is not statistically significant (p-value = 0.2095).
+
+# The scatterplot visualizes the negative trend, but the high degree of variability indicates that altitude alone is not a strong predictor of malaria prevalence.
+
+# While the analysis hints at lower prevalence in higher altitude districts, the lack of statistical significance means the altitude-prevalence relationship cannot be conclusively determined from this data.
+
+```
+
+
+
+
+
+
+  
+
+
+
+
+
+
+

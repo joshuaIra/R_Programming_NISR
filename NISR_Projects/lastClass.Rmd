@@ -1,0 +1,52 @@
+---
+title: "Untitled"
+author: "Josue Iradukunda"
+date: "`r Sys.Date()`"
+output: word_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+checking class of all variable of a given data frame
+
+```{r}
+library(tictoc)
+tic() # to make it run first and check time used to run
+dtpes <- c()
+
+for (i in 1:ncol(iris)){
+ dtpes[i]<- class(iris[[i]])
+}
+print(dtpes)
+unique(dtpes)
+
+toc()
+```
+```{r}
+library(tictoc)
+tic()
+
+#apply(iris, MARGIN = 2, FUN = class)
+
+unlist(lapply(iris, class))
+
+lapply(iris, class)
+
+#mean of all bariables
+#sapply(Filter(is.numeric, iris), mean) # filter removed NA for factor datatpe
+#as.matrix(iris)
+```
+```{r}
+coef_disp <- function(x){  # x is a numeric vecor
+  sd(x)/mean(x)
+}
+get_range <- function(x) diff(range(x))
+
+minmax < function(x) c()
+
+```
+

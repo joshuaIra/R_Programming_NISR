@@ -1,0 +1,13 @@
+---
+title: "Prediction_Model"
+author: "Josue Iradukunda"
+date: "`r Sys.Date()`"
+output: word_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+

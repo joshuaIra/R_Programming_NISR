@@ -1,0 +1,401 @@
+---
+title: "Assignement 2"
+output:
+  word_document: default
+  pdf_document: default
+date: "2024-01-10"
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+## Introduction :
+
+This assignment consists of performing data cleaning and manipulation, and then some statistical analysis. 
+
+## Dataset:
+
+The dataset is retrieved from [Rwanda DHS (Demographic and Health Survey)](https://dhsprogram.com/Data/) 2020. The type of dataset used here is Household member. You will get data in two files: main SPSS File and Map File (for descriptions). 
+
+Your Assignments steps:
+
+1. Read the dataset in R.
+
+```{r echo=FALSE}
+# required package
+library(haven)
+
+# import data
+data_sav <- read_sav(" ")
+#data_map <- read.table("DHS2020/RWPR81FL.MAP", sep = "\t", header = TRUE)
+
+# data dimension
+dim_no <- dim(data_sav)
+```
+## In our dataset of hoursehourd We have `r dim_no[1]` total number of Obersvation and `r dim_no[2]` total number of Variables.
+
+
+- Visualize, inspect and get familiar with the data
+```{r echo=FALSE}
+# your code here
+View(data_sav)
+ #View(data_map)
+
+```
+
+
+2. Select only few columns, important in this Assignments. They are the following: "HV001", "HV009", "HV010", "HV011", "HV014", "SHDISTRICT", "HV024", "HV025", "HV040", "HV227", "HV228", "HV270", "HV105", "HV106", "HML3", "HML4", "HML7",
+  "HML10", "HML22", "HML32","HML33", "HML35"
+
+```{r echo=FALSE}
+
+# Select columns by their names
+selected_columns <- data_sav[, c("HV001", "HV009", "HV010", "HV011", "HV014", "SHDISTRICT", "HV024", "HV025", "HV040", "HV227", "HV228", "HV270", "HV105", "HV106", "HML3", "HML4", "HML7","HML10", "HML22", "HML32","HML33", "HML35")]
+selected_columns
+
+```
+
+  
+3. Rename variables using the variable descriptions below. Give meaningful (short) name to the variables of your choice.
+
+>* HV001= "Cluster number", 
+>* HV009 = "Number of household members",
+>* HV010 = "Number of eligible women in household",
+>* HV011 = "Number of eligible men in household",
+>* HV014 = "Number of children 5 and under (de jure)",
+>* SHDISTRICT = "District (geographic area)",
+>* HV024 = "Region (provinces, corresponding values in a map file)",
+>* HV025 = "Type of place of residence (rural versus urban)",
+>* HV040 = "Cluster altitude in meters",
+>* HV227 = "Presence of mosquito bed net for sleeping",
+>* HV228 = "Number of children under 5 who slept under a mosquito bed net",
+>* HV270 = "Wealth index combined (an index based on various household assets indicating socio-economic status)",
+>* HV105 = "Age of household members",
+>* HV106 = "Highest educational level attained by individuals",
+>* HML3 = "Net observed by interviewer",
+>* HML4 = "Months ago the net was obtained",
+>* HML7 = "Brand of net",
+>* HML10 = "Insecticide-Treated Net (ITN)",
+>* HML22 = "Obtained net from campaign, antenatal, or immunization visit",
+>* HML33= "Result of malaria measurement", 
+>* HML32 = "Final result of malaria from blood smear test",
+>* HML35 = "Result of malaria rapid test"
+
+
+# Renaming the dataset variables with meaningful names
+```{r echo=FALSE}
+#Rename variables using the variable descriptions given.
+colnames(selected_columns) <- c(
+  "ClusterNumber", "HouseholdMembers", "EligibleWomen", "EligibleMen", "ChildrenUnder5", 
+  "District", "Region", "ResidenceType", "Altitude", "BedNetPresence", 
+  "ChildrenUnder5BedNet", "WealthIndex", "Age", "EducationLevel", 
+  "NetObserved", "NetObtainedMonthsAgo", "NetBrand", "ITN", "NetSource", 
+  "BloodSmearMalariaResult", "MalariaMeasurementResult", "RapidTestMalariaResult"
+)
+head(selected_columns)
+
+```
+
+
+## Data cleaning
+
+1. Inspect each variables, decode variable to its original unique variables. 
+Example, Variable "HV024"(Region) has Unique values 1,2,3,4,5. Decode it to orginal Region Kigali, South, West, North, East
+Use Map file to see the description of each values in data. 
+
+```{r echo=FALSE}
+# your code
+
+# Decode all columns
+all_columns <-  c(
+  "ClusterNumber", "HouseholdMembers", "EligibleWomen", "EligibleMen", "ChildrenUnder5", "District", "Region", "ResidenceType", "Altitude", "BedNetPresence","ChildrenUnder5BedNet", "WealthIndex", "Age", "EducationLevel", 
+  "NetObserved", "NetObtainedMonthsAgo", "NetBrand", "ITN", "NetSource", 
+  "MalariaMeasurementResult", "BloodSmearMalariaResult", "RapidTestMalariaResult")
+
+selected_columns[all_columns] <- sapply(selected_columns[all_columns], as_factor)
+
+
+# region_name_decord <- as.character(selected_columns$Region)
+# for (m in 1:length(region_name_decord)) {
+#   
+#   if (region_name_decord[m] == "1"){
+#     region_name_decord[m] <- "Kigali"
+#   }else if (region_name_decord[m] == "2") {
+#     region_name_decord[m] <- "South"
+#   }else if (region_name_decord[m] == "3") {
+#     region_name_decord[m] <- "West"
+#   }else if (region_name_decord[m] == "4") {
+#     region_name_decord[m] <- "North"
+#   }else {
+#     region_name_decord[m] <- "East"
+#   
+#   }
+# }
+
+
+```
+
+
+<!-- ```{r echo=FALSE} -->
+<!-- selected_columns$ResidenceType -->
+
+<!-- residence_type <- as.numeric(selected_columns$ResidenceType) -->
+<!-- for (i in 1:length(residence_type)) { -->
+<!--   if(residence_type[i]=="1"){ -->
+<!--    residence_type[i]<-"Urban" -->
+<!--   }else{ -->
+<!--     residence_type[i]<-"Rural"  -->
+<!--   } -->
+<!-- } -->
+<!-- selected_columns$ResidenceType -->
+<!-- ``` -->
+
+
+2. Handling Missing Values:
+
+Determine columns with missing values. Devise the strategy to handle missing values: Deleting missing values, replacing missing values with mean or mode.
+```{r echo=FALSE}
+# your code
+# checking columns with missing values in entire datasets
+
+missing_value <- colSums(is.na(selected_columns))
+
+# check columns with missing values
+missing_value[missing_value > 0]
+
+```
+```{r echo=FALSE}
+# cleaning missing values using Mode
+
+mode <- function(x) names(sort(table(x), decreasing = TRUE))[1]
+selected_columns$ChildrenUnder5BedNet[is.na(selected_columns$ChildrenUnder5BedNet)] <- mode(selected_columns$ChildrenUnder5BedNet)
+head(selected_columns)
+```
+```{r echo=FALSE}
+# # Define the mode function
+# mode <- function(y) names(sort(table(y), decreasing = TRUE))[1]
+# 
+# # Check if there are any NA values in the column before replacing
+# if (any(is.na(selected_columns$NetObserved))) {
+#   selected_columns$NetObserved[is.na(selected_columns$NetObserved)] <- mode(selected_columns$NetObserved)
+# }
+# 
+# # View the first few rows of the updated dataframe
+# head(selected_columns)
+
+
+# Mode function to handle categorical data
+calculate_mode <- function(x) {
+  # Handle NA values
+  x <- x[!is.na(x)]
+  # Find the most frequent value
+  if (length(x) == 0) return(NA)  # If all values are NA, return NA
+  mode_value <- names(sort(table(x), decreasing = TRUE))[1]
+  return(mode_value)
+}
+# Handle all using lappy function
+selected_columns[] <- lapply(selected_columns, function(col) {
+  if (is.numeric(col)) {
+    # Replace numerical missing values with the mean
+    col[is.na(col)] <- mean(col, na.rm = TRUE)
+  } else if (is.factor(col) || is.character(col)) {
+    # Replace categorical missing values with the mode
+    col[is.na(col)] <- calculate_mode(col)
+  }
+  return(col)
+})
+
+View(selected_columns)
+```
+
+
+3. Create new variables
+
+>a. Create variable called "Old Mosquito" variable HML4 (Months ago the net was obtained). The created variable must binary with 1 when mosquito is more than 24 months old. 
+
+```{r echo=FALSE}
+# Create the "Old Mosquito" variable
+selected_columns<- selected_columns %>%
+  mutate(Old_Mosquito = ifelse(NetObtainedMonthsAgo > 24, 1, 0))
+
+# View the updated data
+selected_columns
+```
+
+
+>b. Create Variable "Average District altitude". Create this variable by averaging cluster altitude in each district. We have three variables HV001= "Cluster number", SHDISTRICT = "District (geographic area)" and HV040 = "Cluster altitude in meters". Filter out clusters in each district, do `mean` of cluster
+altitude in that district. 
+
+```{r echo=FALSE}
+# Load necessary libraries
+library(dplyr)
+
+# Assume your data is in a data frame called 'data'
+# Example data
+# data <- data.frame(HV001 = c(1,2,3,4), SHDISTRICT = c("A", "A", "B", "B"), HV040 = c(500, 600, 700, 800))
+
+# Create the Average District Altitude variable
+
+selected_columns<- selected_columns %>%
+  group_by(District) %>%
+  mutate(Average_District_Altitude = mean(as.numeric(Altitude))) %>% ungroup()
+
+# View the data
+print(selected_columns)
+
+```
+
+
+## Data visualizations: 
+
+Produce visualization of your choice. At least each of these
+- Bar plot
+
+```{r echo=FALSE}
+# Count the number of malaria cases by district
+malaria_count <- table(selected_columns$District, selected_columns$MalariaMeasurementResult)
+
+# For each district, count how many malaria measurement results (1) are present
+# Assuming 'MalariaMeasurementResult == 1' means a positive malaria result
+malaria_results_by_district <- apply(malaria_count, 1, function(x) x["1"])
+
+#Hundle NA
+malaria_results_by_district[is.na(malaria_results_by_district)] <- 1
+# Create a bar plot
+barplot(malaria_results_by_district, 
+        main = "Malaria Results by District", 
+        col = "blue", 
+        ylab = "Number of Malaria Results", 
+        xlab = "District")
+
+# Add the counts as labels on top of the bars
+text(x = seq_along(malaria_results_by_district),
+     y = malaria_results_by_district,
+     labels = malaria_results_by_district,
+     pos = 3, cex = 1, col = "black")
+```
+
+```{r}
+# your code
+count <- table(selected_columns$District)
+barplot(count,
+        main = "Distribution of District", 
+        col = "blue")
+
+```
+
+- Pie plot
+```{r echo=FALSE}
+# your code
+
+count <- table(selected_columns$WealthIndex)
+pc<-round(count/sum(count)*100,2)
+pie(count,
+    labels = paste0(names(count)," (", pc,"%)",sep=""),
+    main = "Distribution Wealth Index", 
+    xlab = "Wealth Index",
+    col = c("green","blue","navy","purple","lightgreen")
+    )
+```
+
+- Histogram
+```{r echo=FALSE}
+# # your code
+# count_att <- table(selected_columns$Average_District_Altitude)
+# hist(count_att,
+#      main = "Distribution Of Average District Altitude", 
+#         col = "lightblue", 
+#         xlab = "District"
+#      )
+
+malaria_by_district <- selected_columns %>%
+  group_by(District, MalariaMeasurementResult) %>%
+  summarise(Count = n(), .groups = 'drop') %>%
+  # Sort districts by total malaria cases
+  group_by(District) %>%
+  mutate(TotalCases = sum(Count)) %>%
+  ungroup() %>%
+  arrange(desc(TotalCases)) %>%
+  # Select top 15 districts for readability
+  slice_head(n = 15) %>%
+  ggplot(aes(x = as.character(District), y = Count, fill = as.character(MalariaMeasurementResult))) +
+  geom_bar(stat = "identity", position = "dodge") +
+  labs(title = "Malaria Measurement Results in Top 15 Districts",
+       x = "District", 
+       y = "Number of Cases",
+       fill = "Malaria Result") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+print(malaria_by_district)
+```
+
+- Boxplot
+```{r}
+# your code
+
+```
+
+
+## Statistical analysis
+
+### Descriptive statistics
+
+1. Use Variable "HML33" to filter out people who had Malaria measurement. 
+```{r}
+# your code
+colnames(selected_columns)
+table(selected_columns$MalariaMeasurementResult== "Measured")
+
+```
+
+2. Calculate Malaria [Prevalence](https://dhsprogram.com/data/Guide-to-DHS-Statistics/Prevalence_of_Malaria_in_Children.htm) for both "Blood Smear" and "Rapid Test"
+```{r echo=FALSE}
+# Calculate prevalence for Blood Smear
+total_blood_smeared <- sum(!is.na(selected_columns$BloodSmearMalariaResult))  # Total number of tests (excluding NA)
+
+positive_blood_smear <- sum(selected_columns$BloodSmearMalariaResult == "Positive")  # Number of positive results
+
+prevalence_blood_smeared <- (positive_blood_smear / total_blood_smeared) * 100
+
+# Calculate prevalence for Rapid Test
+total_rapid_tested <- sum(!is.na(selected_columns$RapidTestMalariaResult))  # Total number of rapid tests (excluding NA)
+positive_rapid_test <- sum(selected_columns$RapidTestMalariaResult == "Positive")  # Number of positive results
+
+prevalence_rapid_test <- (positive_rapid_test / total_rapid_tested) * 100
+
+# Print results
+cat("Malaria Prevalence for Blood Smear: ", prevalence_blood_smeared, "%\n")
+cat("Malaria Prevalence for Rapid Test: ", prevalence_rapid_test, "%\n")
+```
+
+3. Aggregate Prevalence at district Level
+```{r echo=FALSE}
+# Prevalence by district (example: grouping by district)
+prevalence_by_district <- selected_columns %>%
+  group_by(District) %>%
+  summarise(
+    prevalence_blood_smeared = (table(BloodSmearMalariaResult == "Positive") / sum(!is.na(BloodSmearMalariaResult))) * 100,
+    prevalence_rapid_test = (sum(RapidTestMalariaResult == "Positive") / sum(!is.na(RapidTestMalariaResult))) * 100
+  )
+
+# Print results
+print(prevalence_by_district)
+```
+
+### Analytical Analysis
+1. Compare the prevalence in both tests and state if they are different.
+
+***Hint:*** Check `?` the documentations for `t.test` and `aov`.
+```{r}
+# your code
+```
+
+### Bonus
+
+2. Using a statistical model of your choice, determine if there is a relationship between malaria prevalence in a district and its average altitude. 
+```{r}
+# your code
+```
